@@ -17,10 +17,13 @@ Copyright: Erik Baalbergen, Eric Gisin, Arnold Robbins, J.T. Conklin
 License: public-domain
  This program is in the Public Domain.
 
-Files: src/mksignames.c
-Copyright: 1992, 1996, 1997, 1999, 2000, 2002-2012, Free Software Foundation, Inc.
-Comment: This file is not directly linked with dash.  However, its output is.
-License: GPL-2+
+Files: src/aok_mksignames.c
+Copyright: 2026, iSH-AOK contributors
+Comment:
+ Replaces the GPL-2+ mksignames.c, which is not present in this tree. Written
+ from the interface its callers require rather than from the original, and
+ licensed as the rest of dash.
+License: BSD-3-Clause
 
 Files: debian/*
 Copyright:
@@ -64,20 +67,3 @@ License: BSD-3-clause
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  SUCH DAMAGE.
 
-License: GPL-2+
- This program is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2, or (at your option)
- any later version.
- .
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- General Public License for more details.
- .
- You should have received a copy of the GNU General Public License along
- with this program; if not, write to the Free Software Foundation,
- Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- .
- On Debian systems, the complete text of the GNU General Public License
- version 2 can be found in ‘/usr/share/common-licenses/GPL-2’.
