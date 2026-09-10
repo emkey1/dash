@@ -998,7 +998,7 @@ evalfun(struct funcnode *func, int argc, char **argv, int flags)
 	INTON;
 	shellparam.nparam = argc - 1;
 	shellparam.p = argv + 1;
-	shellparam.optind = 1;
+	shellparam.sh_optind = 1;
 	shellparam.optoff = -1;
 	evaltree(func->n.ndefun.body, flags & EV_TESTED);
 funcdone:

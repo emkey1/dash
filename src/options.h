@@ -38,7 +38,14 @@ struct shparam {
 	int nparam;		/* # of positional parameters (without $0) */
 	unsigned char malloc;	/* if parameter list dynamically allocated */
 	char **p;		/* parameter list */
-	int optind;		/* next parameter to be processed by getopts */
+	/* NOT libc's optind, and it must not share the name: iSH-AOK
+	 * force-includes kernel/native_libc.h, whose
+	 * `#define optind (*nlibc_optindp())` turns this field
+	 * declaration into a function and fails the build. This is
+	 * the getopts builtin's cursor over the positional
+	 * parameters; libc's optind is a different thing that
+	 * histedit.c uses and that SHOULD be redirected. */
+	int sh_optind;		/* next parameter to be processed by getopts */
 	int optoff;		/* used by getopts */
 };
 
