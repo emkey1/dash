@@ -62,9 +62,25 @@
  *
  * From the platform's own <signal.h>, through #ifdef, so a signal the host does
  * not have simply is not emitted and one it has that this list does not know
- * still gets a usable name from the numeric fallback below. That matters more
- * here than in a normal port: iSH-AOK compiles this against its own shim, and
- * the guest's signal numbering is Linux's regardless of the host.
+ * still gets a usable name from the numeric fallback below.
+ *
+ * WHICH NUMBERING THIS TABLE IS INDEXED BY, since iSH-AOK compiles dash as a
+ * native program against its own shim and the answer is not obvious. It is the
+ * HOST's, and that is correct, because the shim translates at every boundary
+ * rather than letting the two numberings meet:
+ *
+ *   kernel/native_libc.c  nlibc_signal_to_guest()      on the way out
+ *   kernel/native_libc.c  nlibc_wait_status_to_host()  on the way back
+ *
+ * The second exists because the numbers disagree exactly where it hurts: guest
+ * SIGUSR1 is 10, which is Darwin's SIGBUS, and before that translation a native
+ * bash reported a child killed by SIGUSR1 as "Bus error". So a native program
+ * sees host numbering throughout, this table is built from the host's
+ * <signal.h>, and the two agree by construction.
+ *
+ * (An earlier version of this comment claimed the opposite -- that the guest's
+ * Linux numbering is what reaches here. It does not, and a table built on that
+ * belief would have been wrong for every signal above 15.)
  */
 
 #include <signal.h>
