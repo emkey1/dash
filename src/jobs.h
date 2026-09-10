@@ -104,6 +104,15 @@ void showjobs(struct output *, int);
 int waitcmd(int, char **);
 struct job *makejob(union node *, int);
 int forkshell(struct job *, union node *, int);
+/*
+ * iSH-AOK: these three were file-statics, and are declared here because
+ * aok_fork.c needs them -- it is the parent half of fork-by-relaunch and does
+ * exactly the job bookkeeping forkshell used to do around fork(). Exported
+ * rather than duplicated: two copies of "record the child in the job table"
+ * would be two things to keep in step with upstream.
+ */
+void forkparent(struct job *, union node *, int, pid_t);
+void aok_tcsetpgrp_fg(pid_t);
 struct job *vforkexec(union node *n, char **argv, const char *path, int idx);
 int waitforjob(struct job *);
 int stoppedjobs(void);

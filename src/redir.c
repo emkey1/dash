@@ -55,6 +55,7 @@
 #include "output.h"
 #include "memalloc.h"
 #include "error.h"
+#include "aok_fork.h"
 #include "trap.h"
 
 
@@ -356,18 +357,18 @@ openhere(union node *redir)
 		goto out;
 	}
 
-	if (forkshell((struct job *)NULL, (union node *)NULL, FORK_NOJOB) == 0) {
-		close(pip[0]);
-		signal(SIGINT, SIG_IGN);
-		signal(SIGQUIT, SIG_IGN);
-		signal(SIGHUP, SIG_IGN);
-#ifdef SIGTSTP
-		signal(SIGTSTP, SIG_IGN);
-#endif
-		signal(SIGPIPE, SIG_DFL);
-		xwrite(pip[1], p, len);
-		_exit(0);
-	}
+	/*
+	 * iSH-AOK: no writer process. Upstream forks one because a document
+	 * larger than the pipe buffer cannot be written before the reader has
+	 * started; a descriptor that already HOLDS the text has the same
+	 * property and needs nothing running alongside it. See aok_here_fd.
+	 */
+	close(pip[0]);
+	close(pip[1]);
+	pip[0] = aok_here_fd(p, len);
+	if (pip[0] < 0)
+		sh_error("Out of space");
+	return pip[0];
 out:
 	close(pip[1]);
 	return pip[0];

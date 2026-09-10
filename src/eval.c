@@ -62,6 +62,7 @@
 #include "error.h"
 #include "show.h"
 #include "mystring.h"
+#include "aok_fork.h"
 #ifndef SMALL
 #include "myhistedit.h"
 #endif
@@ -483,6 +484,7 @@ evalsubshell(union node *n, int flags)
 	struct job *jp;
 	int backgnd = (n->type == NBACKGND);
 	int status;
+	int pid;
 
 	errlinno = lineno = n->nredir.linno;
 	if (funcline)
@@ -495,16 +497,31 @@ evalsubshell(union node *n, int flags)
 		goto nofork;
 	}
 	jp = makejob(n, 1);
-	if (forkshell(jp, n, backgnd) == 0) {
-		flags |= EV_EXIT;
+	{
+		/* iSH-AOK: fork by re-launch (aok_fork.c). The child's arm of
+		 * the old `if (forkshell(...) == 0)` cannot live here any more
+		 * -- the child is a fresh dash on another guest task, not this
+		 * function on another stack -- so what it used to do is
+		 * described to it instead: AOK_RUN_SUBSHELL means "apply
+		 * n->nredir.redirect, then evaluate n->nredir.n".
+		 *
+		 * The flag arithmetic stays on this side, where the values are
+		 * in scope, and travels with the request. */
+		int cflags = flags | EV_EXIT;
+
 		if (backgnd)
-			flags &=~ EV_TESTED;
-nofork:
-		INTON;
-		redirect(n->nredir.redirect, 0);
-		evaltreenr(n->nredir.n, flags);
-		/* never returns */
+			cflags &= ~EV_TESTED;
+		pid = aok_forkshell(jp, n, backgnd, AOK_RUN_SUBSHELL, cflags,
+				    NULL);
+		forkparent(jp, n, backgnd, pid);
 	}
+	goto forked;
+nofork:
+	INTON;
+	redirect(n->nredir.redirect, 0);
+	evaltreenr(n->nredir.n, flags);
+	/* never returns */
+forked:
 	status = 0;
 	if (! backgnd)
 		status = waitforjob(jp);
@@ -582,21 +599,22 @@ evalpipe(union node *n, int flags)
 				sh_error("Pipe call failed");
 			}
 		}
-		if (forkshell(jp, lp->n, n->npipe.backgnd) == 0) {
-			INTON;
-			if (pip[1] >= 0) {
-				close(pip[0]);
-			}
-			if (prevfd > 0) {
-				dup2(prevfd, 0);
-				close(prevfd);
-			}
-			if (pip[1] > 1) {
-				dup2(pip[1], 1);
-				close(pip[1]);
-			}
-			evaltreenr(lp->n, flags);
-			/* never returns */
+		{
+			/* iSH-AOK: the descriptor work the child used to do
+			 * between fork() and evaltreenr becomes posix_spawn
+			 * file actions, because the child does not exist yet
+			 * when the decision is made. Same three moves, same
+			 * order, decided on this side. */
+			struct aok_fork_io io;
+			int pid;
+
+			memset(&io, 0, sizeof(io));
+			io.in_fd = prevfd > 0 ? prevfd : -1;
+			io.out_fd = pip[1] > 1 ? pip[1] : -1;
+			io.close_fds[io.nclose++] = pip[1] >= 0 ? pip[0] : -1;
+			pid = aok_forkshell(jp, lp->n, n->npipe.backgnd,
+					    AOK_RUN_TREE, flags, &io);
+			forkparent(jp, lp->n, n->npipe.backgnd, pid);
 		}
 		if (prevfd >= 0)
 			close(prevfd);
@@ -638,16 +656,21 @@ evalbackcmd(union node *n, struct backcmd *result)
 	if (pipe(pip) < 0)
 		sh_error("Pipe call failed");
 	jp = makejob(n, 1);
-	if (forkshell(jp, n, FORK_NOJOB) == 0) {
-		FORCEINTON;
-		close(pip[0]);
-		if (pip[1] != 1) {
-			dup2(pip[1], 1);
-			close(pip[1]);
-		}
-		ifsfree();
-		evaltreenr(n, EV_EXIT);
-		/* NOTREACHED */
+	{
+		/* iSH-AOK: as evalpipe above. ifsfree() is not passed on --
+		 * upstream calls it in the child to release the parent's IFS
+		 * working state before a long-lived subshell, and a
+		 * re-launched child never had it. */
+		struct aok_fork_io io;
+		int pid;
+
+		memset(&io, 0, sizeof(io));
+		io.in_fd = -1;
+		io.out_fd = pip[1] != 1 ? pip[1] : -1;
+		io.close_fds[io.nclose++] = pip[0];
+		pid = aok_forkshell(jp, n, FORK_NOJOB, AOK_RUN_TREE, EV_EXIT,
+				    &io);
+		forkparent(jp, n, FORK_NOJOB, pid);
 	}
 	close(pip[1]);
 	result->fd = pip[0];
@@ -899,7 +922,10 @@ bail:
 		/* Fork off a child process if necessary. */
 		if (!(flags & EV_EXIT) || have_traps()) {
 			INTOFF;
-			jp = vforkexec(cmd, argv, path, cmdentry.u.index);
+			/* iSH-AOK: spawns the command rather than forking a
+			 * dash that would immediately exec it. See
+			 * aok_fork.c. */
+			jp = aok_vforkexec(cmd, argv, path, cmdentry.u.index);
 			break;
 		}
 		shellexec(argv, path, cmdentry.u.index);
@@ -1151,4 +1177,21 @@ eprintlist(struct output *out, struct strlist *sp, int sep)
 	}
 
 	return sep;
+}
+
+
+/*
+ * iSH-AOK: funcline is a file-static, and it is what $LINENO is measured
+ * against inside a function, so a re-launched subshell has to be told it.
+ */
+int
+aok_funcline_get(void)
+{
+	return funcline;
+}
+
+void
+aok_funcline_set(int v)
+{
+	funcline = v;
 }

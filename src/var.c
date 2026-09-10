@@ -689,3 +689,85 @@ findvar(struct var **vpp, const char *name)
 	}
 	return vpp;
 }
+
+
+/*
+ * iSH-AOK: the variable table, out and back.
+ *
+ * A subshell here is a re-launched dash on its own thread, so it cannot
+ * inherit this table by inheriting the address space -- vartab is __thread
+ * (tools/dash-tls-rewrite.py) and the child's starts empty. The parent copies
+ * it out before spawning and the child sets it from the copy.
+ *
+ * A COPY rather than a shared pointer, because the parent carries on the
+ * moment posix_spawn returns: `sleep 1 & x=changed` would otherwise have the
+ * child read whatever the parent had reached.
+ *
+ * Only VEXPORT, VREADONLY and VUNSET travel. VSTRFIXED and VTEXTFIXED say
+ * "this struct/text is one of varinit's, do not free it", which is a fact
+ * about the PARENT's storage and would be a promise the child cannot keep --
+ * the child's copies are all heap. varinit's own entries are already installed
+ * by init() before this runs, and setvareq updates them in place.
+ */
+struct aok_vars {
+	char **text;
+	int *flags;
+	int n;
+};
+
+struct aok_vars *
+aok_vars_save(void)
+{
+	struct aok_vars *s;
+	struct var *vp;
+	int i, n = 0;
+
+	for (i = 0; i < VTABSIZE; i++)
+		for (vp = vartab[i]; vp; vp = vp->next)
+			n++;
+	s = ckmalloc(sizeof(*s));
+	s->n = 0;
+	s->text = ckmalloc((n ? n : 1) * sizeof(*s->text));
+	s->flags = ckmalloc((n ? n : 1) * sizeof(*s->flags));
+	for (i = 0; i < VTABSIZE; i++) {
+		for (vp = vartab[i]; vp; vp = vp->next) {
+			if (vp->flags & VUNSET)
+				continue;
+			s->text[s->n] = savestr(vp->text);
+			s->flags[s->n] = vp->flags & (VEXPORT | VREADONLY);
+			s->n++;
+		}
+	}
+	return s;
+}
+
+void
+aok_vars_load(struct aok_vars *s)
+{
+	int i;
+
+	for (i = 0; i < s->n; i++) {
+		/* VNOSAVE: setvareq takes the heap string as it stands, so the
+		 * snapshot hands its own copies over rather than making a
+		 * second set. Readonly is applied AFTER, or setvareq would
+		 * refuse the ones the parent had already made readonly. */
+		int flags = s->flags[i] & ~VREADONLY;
+		struct var *vp = setvareq(s->text[i], flags | VNOSAVE);
+		if (vp && (s->flags[i] & VREADONLY))
+			vp->flags |= VREADONLY;
+		s->text[i] = NULL;
+	}
+}
+
+void
+aok_vars_free(struct aok_vars *s)
+{
+	int i;
+
+	for (i = 0; i < s->n; i++)
+		if (s->text[i])
+			ckfree(s->text[i]);
+	ckfree(s->text);
+	ckfree(s->flags);
+	ckfree(s);
+}

@@ -47,6 +47,9 @@ void ignoresig(int);
 void onsig(int);
 void dotrap(void);
 void setinteractive(int);
+/* iSH-AOK, see the bottom of trap.c. */
+void aok_traps_save(char *);
+void aok_traps_load(const char *);
 void exitshell(void) __attribute__((__noreturn__));
 int decode_signal(const char *, int);
 void sigblockall(sigset_t *oldmask);

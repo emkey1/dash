@@ -906,3 +906,80 @@ commandcmd(argc, argv)
 
 	return 0;
 }
+
+
+/*
+ * iSH-AOK: shell functions, out and back.
+ *
+ * The funcnode is COPIED rather than shared. Sharing would be tempting -- a
+ * function's tree never changes once defined, and both shells are in one
+ * address space -- but `count` is an ordinary int that freefunc decrements,
+ * and two shells dropping the last reference at once is a double free.
+ * copyfunc is cheap and the parent is the only thread touching the original.
+ *
+ * Only CMDFUNCTION entries travel. The rest of cmdtable is the PATH hash,
+ * which is a cache the child rebuilds correctly on its own -- and would
+ * rebuild WRONGLY from the parent if the subshell changes PATH.
+ */
+struct aok_funcs {
+	char **name;
+	struct funcnode **func;
+	int n;
+};
+
+struct aok_funcs *
+aok_funcs_save(void)
+{
+	struct aok_funcs *s;
+	struct tblentry *cmdp;
+	int i, n = 0;
+
+	for (i = 0; i < CMDTABLESIZE; i++)
+		for (cmdp = cmdtable[i]; cmdp; cmdp = cmdp->next)
+			if (cmdp->cmdtype == CMDFUNCTION)
+				n++;
+	s = ckmalloc(sizeof(*s));
+	s->n = n;
+	s->name = ckmalloc((n ? n : 1) * sizeof(*s->name));
+	s->func = ckmalloc((n ? n : 1) * sizeof(*s->func));
+	n = 0;
+	for (i = 0; i < CMDTABLESIZE; i++) {
+		for (cmdp = cmdtable[i]; cmdp; cmdp = cmdp->next) {
+			if (cmdp->cmdtype != CMDFUNCTION)
+				continue;
+			s->name[n] = savestr(cmdp->cmdname);
+			s->func[n] = copyfunc(&cmdp->param.func->n);
+			n++;
+		}
+	}
+	return s;
+}
+
+void
+aok_funcs_load(struct aok_funcs *s)
+{
+	struct cmdentry entry;
+	int i;
+
+	entry.cmdtype = CMDFUNCTION;
+	for (i = 0; i < s->n; i++) {
+		entry.u.func = s->func[i];
+		addcmdentry(s->name[i], &entry);
+		s->func[i] = NULL;	/* the table owns it now */
+	}
+}
+
+void
+aok_funcs_free(struct aok_funcs *s)
+{
+	int i;
+
+	for (i = 0; i < s->n; i++) {
+		ckfree(s->name[i]);
+		if (s->func[i])
+			freefunc(s->func[i]);
+	}
+	ckfree(s->name);
+	ckfree(s->func);
+	ckfree(s);
+}

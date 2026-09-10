@@ -225,3 +225,62 @@ __lookupalias(const char *name) {
 
 	return app;
 }
+
+
+/*
+ * iSH-AOK: the alias table, out and back. See the note in var.c -- same
+ * reason, same shape.
+ */
+struct aok_aliases {
+	char **name;
+	char **val;
+	int n;
+};
+
+struct aok_aliases *
+aok_aliases_save(void)
+{
+	struct aok_aliases *s;
+	struct alias *ap;
+	int i, n = 0;
+
+	for (i = 0; i < ATABSIZE; i++)
+		for (ap = atab[i]; ap; ap = ap->next)
+			n++;
+	s = ckmalloc(sizeof(*s));
+	s->n = n;
+	s->name = ckmalloc((n ? n : 1) * sizeof(*s->name));
+	s->val = ckmalloc((n ? n : 1) * sizeof(*s->val));
+	n = 0;
+	for (i = 0; i < ATABSIZE; i++) {
+		for (ap = atab[i]; ap; ap = ap->next) {
+			s->name[n] = savestr(ap->name);
+			s->val[n] = savestr(ap->val);
+			n++;
+		}
+	}
+	return s;
+}
+
+void
+aok_aliases_load(struct aok_aliases *s)
+{
+	int i;
+
+	for (i = 0; i < s->n; i++)
+		setalias(s->name[i], s->val[i]);
+}
+
+void
+aok_aliases_free(struct aok_aliases *s)
+{
+	int i;
+
+	for (i = 0; i < s->n; i++) {
+		ckfree(s->name[i]);
+		ckfree(s->val[i]);
+	}
+	ckfree(s->name);
+	ckfree(s->val);
+	ckfree(s);
+}

@@ -59,6 +59,7 @@
 #include "mystring.h"
 #include "exec.h"
 #include "cd.h"
+#include "aok_fork.h"
 
 #define PROFILE 0
 
@@ -150,6 +151,17 @@ main(int argc, char **argv)
 	rootpid = getpid();
 	init();
 	setstackmark(&smark);
+	/*
+	 * iSH-AOK: a re-launched subshell (aok_fork.c) takes over here and
+	 * never comes back. AFTER init(), because it sets variables and
+	 * defines functions on top of an initialised shell; INSTEAD OF
+	 * procargs, because its argv is a handoff token rather than a command
+	 * line -- the options, the positional parameters and $0 all arrive in
+	 * the handoff.
+	 */
+	state = 4;
+	aok_fork_child(argc, argv);
+	state = 0;
 	login = procargs(argc, argv);
 	if (login) {
 		state = 1;

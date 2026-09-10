@@ -51,6 +51,7 @@
 #include "error.h"
 #include "trap.h"
 #include "mystring.h"
+#include "aok_fork.h"
 
 /*
  * Sigmode records the current value of the signal handlers for the various
@@ -403,6 +404,10 @@ out:
 	if (likely(!setjmp(loc.loc)))
 		setjobctl(0);
 	flushall();
+	/* iSH-AOK: the one path every dash leaves through, and so the place a
+	 * re-launched child releases the handoff it was given. _exit reclaims
+	 * nothing here -- the heap belongs to the app, not to this task. */
+	aok_fork_child_release();
 	_exit(exitstatus);
 	/* NOTREACHED */
 }
@@ -443,4 +448,40 @@ void sigblockall(sigset_t *oldmask)
 
 	sigfillset(&mask);
 	sigprocmask(SIG_SETMASK, &mask, oldmask);
+}
+
+
+/*
+ * iSH-AOK: the traps a re-launched subshell inherits, which is NOT all of them.
+ *
+ * FORKRESET above is the rule: a forked child frees every trap that has a
+ * command and keeps the ones set to SIG_IGN (`trap "" INT`), because POSIX
+ * says a subshell starts with caught signals back at their default and ignored
+ * signals still ignored. A re-launched child starts with an empty trap table
+ * instead of an inherited one, so the same rule is expressed the other way
+ * round -- only the ignored ones are carried across.
+ *
+ * `ignored` is NSIG bytes, index 0 being the EXIT trap.
+ */
+void
+aok_traps_save(char *ignored)
+{
+	int i;
+
+	for (i = 0; i < NSIG; i++)
+		ignored[i] = trap[i] && trap[i][0] == '\0';
+}
+
+void
+aok_traps_load(const char *ignored)
+{
+	int i;
+
+	for (i = 0; i < NSIG; i++) {
+		if (!ignored[i])
+			continue;
+		trap[i] = savestr("");
+		if (i != 0)
+			setsignal(i);
+	}
 }

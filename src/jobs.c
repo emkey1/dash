@@ -104,13 +104,12 @@ static __thread struct job *curjob;
 __thread int vforked;
 
 STATIC void set_curjob(struct job *, unsigned);
+STATIC void freejob(struct job *);
 STATIC int jobno(const struct job *);
 STATIC int sprint_status(char *, int, int);
-STATIC void freejob(struct job *);
 STATIC struct job *getjob(const char *, int);
 STATIC struct job *growjobtab(void);
 STATIC void forkchild(struct job *, union node *, int);
-STATIC void forkparent(struct job *, union node *, int, pid_t);
 STATIC int dowait(int, struct job *);
 #ifdef SYSV
 STATIC int onsigchild(void);
@@ -121,11 +120,11 @@ STATIC void cmdtxt(union node *);
 STATIC void cmdlist(union node *, int);
 STATIC void cmdputs(const char *);
 STATIC void showpipe(struct job *, struct output *);
+STATIC void xtcsetpgrp(int, pid_t);
 STATIC int getstatus(struct job *);
 
 #if JOBS
 static int restartjob(struct job *, int);
-static void xtcsetpgrp(int, pid_t);
 #endif
 
 STATIC void
@@ -904,7 +903,7 @@ static void forkchild(struct job *jp, union node *n, int mode)
 		freejob(jp);
 }
 
-static void forkparent(struct job *jp, union node *n, int mode, pid_t pid)
+void forkparent(struct job *jp, union node *n, int mode, pid_t pid)
 {
 	if (pid < 0) {
 		TRACE(("Fork failed, errno=%d", errno));
@@ -1547,4 +1546,23 @@ getstatus(struct job *job) {
 	TRACE(("getstatus: job %d, nproc %d, status %x, retval %x\n",
 		jobno(job), job->nprocs, status, retval));
 	return retval;
+}
+
+
+/*
+ * iSH-AOK: hand the terminal to a foreground job's process group.
+ *
+ * xtcsetpgrp and ttyfd are both private to this file, and aok_fork.c is the
+ * only outside caller -- it does the job bookkeeping a fork used to do, but on
+ * the parent side of a posix_spawn. One function rather than exporting the
+ * descriptor, so nothing else can start using ttyfd for something else.
+ */
+void
+aok_tcsetpgrp_fg(pid_t pgrp)
+{
+#if JOBS
+	xtcsetpgrp(ttyfd, pgrp);
+#else
+	(void) pgrp;
+#endif
 }
