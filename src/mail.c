@@ -53,9 +53,9 @@
 #define MAXMBOXES 10
 
 /* times of mailboxes */
-static time_t mailtime[MAXMBOXES];
+static __thread time_t mailtime[MAXMBOXES];
 /* Set if MAIL or MAILPATH is changed. */
-static int changed;
+static __thread int changed;
 
 
 

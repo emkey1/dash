@@ -34,10 +34,10 @@
  *	@(#)eval.h	8.2 (Berkeley) 5/4/95
  */
 
-extern char *commandname;	/* currently executing command */
-extern int exitstatus;		/* exit status of last command */
-extern int back_exitstatus;	/* exit status of backquoted command */
-extern int savestatus;		/* exit status of last command outside traps */
+extern __thread char *commandname;	/* currently executing command */
+extern __thread int exitstatus;		/* exit status of last command */
+extern __thread int back_exitstatus;	/* exit status of backquoted command */
+extern __thread int savestatus;		/* exit status of last command outside traps */
 
 
 struct backcmd {		/* result of evalbackcmd */
@@ -56,7 +56,7 @@ union node;	/* BLETCH for ansi C */
 int evaltree(union node *, int);
 void evalbackcmd(union node *, struct backcmd *);
 
-extern int evalskip;
+extern __thread int evalskip;
 
 /* reasons for skipping commands (see comment on breakcmd routine) */
 #define SKIPBREAK	(1 << 0)

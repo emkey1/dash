@@ -44,7 +44,7 @@
 
 #define ATABSIZE 39
 
-struct alias *atab[ATABSIZE];
+__thread struct alias *atab[ATABSIZE];
 
 STATIC void setalias(const char *, const char *);
 STATIC struct alias *freealias(struct alias *);

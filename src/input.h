@@ -86,7 +86,7 @@ struct parsefile {
 	int unget;
 };
 
-extern struct parsefile *parsefile;
+extern __thread struct parsefile *parsefile;
 
 /*
  * The input line number.  Input.c just defines this variable, and saves

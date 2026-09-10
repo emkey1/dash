@@ -86,4 +86,4 @@
 int echocmd(int, char **);
 
 
-extern const char *commandname;
+extern const __thread char *commandname;

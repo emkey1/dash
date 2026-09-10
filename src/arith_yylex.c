@@ -47,7 +47,7 @@
 #error Arithmetic tokens are out of order.
 #endif
 
-extern const char *arith_buf;
+extern const __thread char *arith_buf;
 
 int
 yylex()

@@ -69,8 +69,8 @@ STATIC const char *updatepwd(const char *);
 STATIC char *getpwd(void);
 STATIC int cdopt(void);
 
-STATIC char *curdir = nullstr;		/* current working directory */
-STATIC char *physdir = nullstr;		/* physical working directory */
+STATIC __thread char *curdir = nullstr;		/* current working directory */
+STATIC __thread char *physdir = nullstr;		/* physical working directory */
 
 STATIC int
 cdopt()

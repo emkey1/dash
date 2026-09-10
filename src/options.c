@@ -55,13 +55,13 @@
 #endif
 #include "show.h"
 
-char *arg0;			/* value of $0 */
-struct shparam shellparam;	/* current positional parameters */
-char **argptr;			/* argument list for builtin commands */
-char *optionarg;		/* set by nextopt (like getopt) */
-char *optptr;			/* used by nextopt */
+__thread char *arg0;			/* value of $0 */
+__thread struct shparam shellparam;	/* current positional parameters */
+__thread char **argptr;			/* argument list for builtin commands */
+__thread char *optionarg;		/* set by nextopt (like getopt) */
+__thread char *optptr;			/* used by nextopt */
 
-char *minusc;			/* argument to -c option */
+__thread char *minusc;			/* argument to -c option */
 
 static const char *const optnames[NOPTS] = {
 	"errexit",
@@ -103,7 +103,7 @@ const char optletters[NOPTS] = {
 	0,
 };
 
-char optlist[NOPTS];
+__thread char optlist[NOPTS];
 
 
 static int options(int);

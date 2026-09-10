@@ -72,15 +72,15 @@ struct shparam {
 #define NOPTS	17
 
 extern const char optletters[NOPTS];
-extern char optlist[NOPTS];
+extern __thread char optlist[NOPTS];
 
 
-extern char *minusc;		/* argument to -c option */
-extern char *arg0;		/* $0 */
-extern struct shparam shellparam;  /* $@ */
-extern char **argptr;		/* argument list for builtin commands */
-extern char *optionarg;		/* set by nextopt */
-extern char *optptr;		/* used by nextopt */
+extern __thread char *minusc;		/* argument to -c option */
+extern __thread char *arg0;		/* $0 */
+extern __thread struct shparam shellparam;  /* $@ */
+extern __thread char **argptr;		/* argument list for builtin commands */
+extern __thread char *optionarg;		/* set by nextopt */
+extern __thread char *optptr;		/* used by nextopt */
 
 int procargs(int, char **);
 void optschanged(void);

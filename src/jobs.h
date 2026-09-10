@@ -85,14 +85,14 @@ struct job {
 
 union node;
 
-extern pid_t backgndpid;	/* pid of last background process */
-extern int job_warning;		/* user was warned about stopped jobs */
+extern __thread pid_t backgndpid;	/* pid of last background process */
+extern __thread int job_warning;		/* user was warned about stopped jobs */
 #if JOBS
-extern int jobctl;		/* true if doing job control */
+extern __thread int jobctl;		/* true if doing job control */
 #else
 #define jobctl 0
 #endif
-extern int vforked;		/* Set if we are in the vforked child */
+extern __thread int vforked;		/* Set if we are in the vforked child */
 
 void setjobctl(int);
 int killcmd(int, char **);

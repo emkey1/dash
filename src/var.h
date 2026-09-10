@@ -73,7 +73,7 @@ struct localvar_list;
 
 
 extern struct localvar *localvars;
-extern struct var varinit[];
+extern __thread struct var varinit[];
 
 #if ATTY
 #define vatty varinit[0]
@@ -105,8 +105,8 @@ extern char defifsvar[];
 extern const char defpathvar[];
 #define defpath (defpathvar + 36)
 
-extern int lineno;
-extern char linenovar[];
+extern __thread int lineno;
+extern __thread char linenovar[];
 
 /*
  * The following macros access the values of the above variables.

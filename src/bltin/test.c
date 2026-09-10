@@ -133,8 +133,8 @@ static struct t_op {
 	{0,	0,	0}
 };
 
-static char **t_wp;
-static struct t_op const *t_wp_op;
+static __thread char **t_wp;
+static __thread struct t_op const *t_wp_op;
 
 static void syntax(const char *, const char *);
 static int oexpr(enum token);

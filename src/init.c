@@ -130,24 +130,24 @@
 
 
 
-extern int loopnest;		/* current loop nesting level */
-extern int inps4;
+extern __thread int loopnest;		/* current loop nesting level */
+extern __thread int inps4;
 
-extern struct parsefile basepf;	/* top level input file */
-extern char basebuf[IBUFSIZ];	/* buffer for top level input file */
+extern __thread struct parsefile basepf;	/* top level input file */
+extern __thread char basebuf[IBUFSIZ];	/* buffer for top level input file */
 
-extern struct jmploc main_handler;
+extern __thread struct jmploc main_handler;
 
 struct redirtab {
 	struct redirtab *next;
 	int renamed[10];
 };
 
-extern struct redirtab *redirlist;
+extern __thread struct redirtab *redirlist;
 
-extern char *trap[NSIG];
+extern __thread char *trap[NSIG];
 
-extern struct localvar_list *localvar_stack;
+extern __thread struct localvar_list *localvar_stack;
 extern char defoptindvar[];
 extern char **environ;
 
@@ -182,7 +182,7 @@ init() {
       /* from var.c: */
       {
 	      char **envp;
-	      static char ppid[32] = "PPID=";
+	      static __thread char ppid[32] = "PPID=";
 	      const char *p;
 	      struct stat64 st1, st2;
 

@@ -36,10 +36,10 @@
 
 #include <signal.h>
 
-extern int trapcnt;
-extern char sigmode[];
-extern volatile sig_atomic_t pending_sig;
-extern volatile sig_atomic_t gotsigchld;
+extern __thread int trapcnt;
+extern __thread char sigmode[];
+extern volatile __thread sig_atomic_t pending_sig;
+extern volatile __thread sig_atomic_t gotsigchld;
 
 int trapcmd(int, char **);
 void setsignal(int);

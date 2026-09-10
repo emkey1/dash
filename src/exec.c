@@ -86,8 +86,8 @@ struct tblentry {
 };
 
 
-STATIC struct tblentry *cmdtable[CMDTABLESIZE];
-STATIC int builtinloc = -1;		/* index in path of %builtin, or -1 */
+STATIC __thread struct tblentry *cmdtable[CMDTABLESIZE];
+STATIC __thread int builtinloc = -1;		/* index in path of %builtin, or -1 */
 
 
 STATIC void tryexec(char *, char **, char **);
@@ -204,7 +204,7 @@ static const char *legal_pathopt(const char *opt, const char *term, int magic)
  * pathopt.
  */
 
-const char *pathopt;
+const __thread char *pathopt;
 
 int padvance_magic(const char **path, const char *name, int magic)
 {
@@ -632,7 +632,7 @@ clearcmdentry(void)
  * Interrupts must be off if called with add != 0.
  */
 
-struct tblentry **lastcmdentry;
+__thread struct tblentry **lastcmdentry;
 
 
 STATIC struct tblentry *

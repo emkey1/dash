@@ -37,9 +37,9 @@
 #include <errno.h>
 
 /* pid of main shell */
-extern int rootpid;
+extern __thread int rootpid;
 /* shell level: 0 for the main shell, 1 for its children, and so on */
-extern int shlvl;
+extern __thread int shlvl;
 #define rootshell (!shlvl)
 
 #ifdef __GLIBC__

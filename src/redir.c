@@ -75,10 +75,10 @@ struct redirtab {
 };
 
 
-MKINIT struct redirtab *redirlist;
+MKINIT __thread struct redirtab *redirlist;
 
 /* Bit map of currently closed file descriptors. */
-static unsigned closed_redirs;
+static __thread unsigned closed_redirs;
 
 STATIC int openredirect(union node *);
 #ifdef notyet

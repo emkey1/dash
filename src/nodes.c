@@ -51,10 +51,10 @@
 #include "system.h"
 
 
-int     funcblocksize;		/* size of structures in function */
-int     funcstringsize;		/* size of strings in node */
-pointer funcblock;		/* block to allocate function from */
-char   *funcstring;		/* block to allocate strings from */
+__thread int     funcblocksize;		/* size of structures in function */
+__thread int     funcstringsize;		/* size of strings in node */
+__thread pointer funcblock;		/* block to allocate function from */
+__thread char   *funcstring;		/* block to allocate strings from */
 
 static const short nodesize[26] = {
       SHELL_ALIGN(sizeof (struct ncmd)),

@@ -102,3 +102,31 @@ static inline int max_int_length(int bytes)
 {
 	return (bytes * 8 - 1) * 0.30102999566398119521 + 14;
 }
+
+/*
+ * iSH-AOK: the per-thread table fixups.
+ *
+ * dash's globals are __thread here, so that a shell and the child it forked by
+ * re-launch -- two guest tasks, two threads, one address space -- do not write
+ * each other's variables (tools/dash-tls-rewrite.py; the fork itself is
+ * aok_fork.c). The globals that point INTO another global lost their
+ * initializers in the process, because the address of a thread-local is not a
+ * compile-time constant, and these put them back. Each lives beside the
+ * globals it repairs; main() calls them all before anything else runs.
+ *
+ * They are unconditional rather than #ifdef'd on the AOK build: a stock `make`
+ * in this tree has to produce a working dash too, since that is how builtins.c,
+ * init.c, nodes.c, signames.c and syntax.c are generated.
+ */
+void aok_fix_memalloc(void);
+void aok_fix_input(void);
+void aok_fix_output(void);
+void aok_fix_var(void);
+
+static inline void aok_fix_tables(void)
+{
+	aok_fix_memalloc();
+	aok_fix_input();
+	aok_fix_output();
+	aok_fix_var();
+}

@@ -100,15 +100,15 @@ struct ifsregion {
 };
 
 /* output of current string */
-static char *expdest;
+static __thread char *expdest;
 /* list of back quote expressions */
-static struct nodelist *argbackq;
+static __thread struct nodelist *argbackq;
 /* first struct in list of ifs regions */
-static struct ifsregion ifsfirst;
+static __thread struct ifsregion ifsfirst;
 /* last struct in list */
-static struct ifsregion *ifslastp;
+static __thread struct ifsregion *ifslastp;
 /* holds expanded arg list */
-static struct arglist exparg;
+static __thread struct arglist exparg;
 
 static char *argstr(char *p, int flag);
 static char *exptilde(char *startp, int flag);
@@ -1238,8 +1238,8 @@ static void addglob(const glob64_t *pglob)
 
 
 #else	/* HAVE_GLOB */
-STATIC char *expdir;
-STATIC unsigned expdir_max;
+STATIC __thread char *expdir;
+STATIC __thread unsigned expdir_max;
 
 
 STATIC void

@@ -45,12 +45,12 @@
 #error Arithmetic tokens are out of order.
 #endif
 
-static const char *arith_startbuf;
+static const __thread char *arith_startbuf;
 
-const char *arith_buf;
-union yystype yylval;
+const __thread char *arith_buf;
+__thread union yystype yylval;
 
-static int last_token;
+static __thread int last_token;
 
 #define ARITH_PRECEDENCE(op, prec) [op - ARITH_BINOP_MIN] = prec
 

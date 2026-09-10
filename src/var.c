@@ -71,18 +71,18 @@ struct localvar_list {
 	struct localvar *lv;
 };
 
-MKINIT struct localvar_list *localvar_stack;
+MKINIT __thread struct localvar_list *localvar_stack;
 
 const char defpathvar[] =
 	"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 char defifsvar[] = "IFS= \t\n";
 MKINIT char defoptindvar[] = "OPTIND=1";
 
-int lineno;
-char linenovar[sizeof("LINENO=")+sizeof(int)*CHAR_BIT/3+1] = "LINENO=";
+__thread int lineno;
+__thread char linenovar[sizeof("LINENO=")+sizeof(int)*CHAR_BIT/3+1] = "LINENO=";
 
 /* Some macros in var.h depend on the order, add new variables to the end. */
-struct var varinit[] = {
+__thread struct var varinit[] = {
 #if ATTY
 	{ 0,	VSTRFIXED|VTEXTFIXED|VUNSET,	"ATTY\0",	0 },
 #endif
@@ -95,7 +95,7 @@ struct var varinit[] = {
 	{ 0,	VSTRFIXED|VTEXTFIXED,		"PS4=+ ",	0 },
 	{ 0,	VSTRFIXED|VTEXTFIXED,		defoptindvar,	getoptsreset },
 #ifdef WITH_LINENO
-	{ 0,	VSTRFIXED|VTEXTFIXED,		linenovar,	0 },
+	{ 0,	VSTRFIXED|VTEXTFIXED,		0,	0 },	/* see aok_fix_var */
 #endif
 #ifndef SMALL
 	{ 0,	VSTRFIXED|VTEXTFIXED|VUNSET,	"TERM\0",	0 },
@@ -103,7 +103,24 @@ struct var varinit[] = {
 #endif
 };
 
-STATIC struct var *vartab[VTABSIZE];
+STATIC __thread struct var *vartab[VTABSIZE];
+
+/*
+ * iSH-AOK: the address of a thread-local is not a compile-time constant, so
+ * the globals that point INTO another global cannot say so in their
+ * initializers any more (tools/dash-tls-rewrite.py, and the reason the
+ * conversion exists at all is in deps/dash/src/aok_fork.c). Each file fixes up
+ * its own, because MINSIZE and varinit's layout are private to their file, and
+ * main() calls the lot before it touches anything.
+ */
+void
+aok_fix_var(void)
+{
+#ifdef WITH_LINENO
+	vlineno.text = linenovar;
+#endif
+}
+
 
 STATIC struct var **hashvar(const char *);
 STATIC int vpcmp(const void *, const void *);
@@ -123,7 +140,7 @@ INCLUDE "var.h"
 MKINIT char **environ;
 INIT {
 	char **envp;
-	static char ppid[32] = "PPID=";
+	static __thread char ppid[32] = "PPID=";
 	const char *p;
 	struct stat64 st1, st2;
 

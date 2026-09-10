@@ -84,6 +84,6 @@ union yystype {
 	char *name;
 };
 
-extern union yystype yylval;
+extern __thread union yystype yylval;
 
 int yylex(void);

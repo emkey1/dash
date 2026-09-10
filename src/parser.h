@@ -77,11 +77,11 @@
  * must be distinct from NULL, so we use the address of a variable that
  * happens to be handy.
  */
-extern int lasttoken;
-extern int tokpushback;
+extern __thread int lasttoken;
+extern __thread int tokpushback;
 #define NEOF ((union node *)&tokpushback)
-extern int whichprompt;		/* 1 == PS1, 2 == PS2 */
-extern int checkkwd;
+extern __thread int whichprompt;		/* 1 == PS1, 2 == PS2 */
+extern __thread int checkkwd;
 
 
 int isassignment(const char *p);

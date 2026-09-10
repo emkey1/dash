@@ -60,8 +60,8 @@ struct jmploc {
 	jmp_buf loc;
 };
 
-extern struct jmploc *handler;
-extern int exception;
+extern __thread struct jmploc *handler;
+extern __thread int exception;
 
 /* exceptions */
 #define EXINT 0		/* SIGINT received */
@@ -77,8 +77,8 @@ extern int exception;
  * more fun than worrying about efficiency and portability. :-))
  */
 
-extern int suppressint;
-extern volatile sig_atomic_t intpending;
+extern __thread int suppressint;
+extern volatile __thread sig_atomic_t intpending;
 
 #define barrier() ({ __asm__ __volatile__ ("": : :"memory"); })
 #define INTOFF \
@@ -117,7 +117,7 @@ void __inton(void);
 
 void exraise(int) __attribute__((__noreturn__));
 void onint(void) __attribute__((__noreturn__));
-extern int errlinno;
+extern __thread int errlinno;
 void sh_error(const char *, ...) __attribute__((__noreturn__));
 void exerror(int, const char *, ...) __attribute__((__noreturn__));
 const char *errmsg(int, int);

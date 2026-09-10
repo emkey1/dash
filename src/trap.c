@@ -66,17 +66,17 @@
 
 
 /* trap handler commands */
-MKINIT char *trap[NSIG];
+MKINIT __thread char *trap[NSIG];
 /* number of non-null traps */
-int trapcnt;
+__thread int trapcnt;
 /* current value of signal */
-char sigmode[NSIG - 1];
+__thread char sigmode[NSIG - 1];
 /* indicates specified signal received */
-static char gotsig[NSIG - 1];
+static __thread char gotsig[NSIG - 1];
 /* last pending signal */
-volatile sig_atomic_t pending_sig;
+volatile __thread sig_atomic_t pending_sig;
 /* received SIGCHLD */
-volatile sig_atomic_t gotsigchld;
+volatile __thread sig_atomic_t gotsigchld;
 
 extern char *signal_names[];
 
@@ -361,7 +361,7 @@ void dotrap(void)
 void
 setinteractive(int on)
 {
-	static int is_interactive;
+	static __thread int is_interactive;
 
 	if (++on == is_interactive)
 		return;

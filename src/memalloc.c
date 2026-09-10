@@ -104,11 +104,28 @@ struct stack_block {
 	char space[MINSIZE];
 };
 
-struct stack_block stackbase;
-struct stack_block *stackp = &stackbase;
-char *stacknxt = stackbase.space;
-size_t stacknleft = MINSIZE;
-char *sstrend = stackbase.space + MINSIZE;
+__thread struct stack_block stackbase;
+__thread struct stack_block *stackp;
+__thread char *stacknxt;
+__thread size_t stacknleft = MINSIZE;
+__thread char *sstrend;
+
+/*
+ * iSH-AOK: the address of a thread-local is not a compile-time constant, so
+ * the globals that point INTO another global cannot say so in their
+ * initializers any more (tools/dash-tls-rewrite.py, and the reason the
+ * conversion exists at all is in deps/dash/src/aok_fork.c). Each file fixes up
+ * its own, because MINSIZE and varinit's layout are private to their file, and
+ * main() calls the lot before it touches anything.
+ */
+void
+aok_fix_memalloc(void)
+{
+	stackp = &stackbase;
+	stacknxt = stackbase.space;
+	stacknleft = MINSIZE;
+	sstrend = stackbase.space + MINSIZE;
+}
 
 pointer
 stalloc(size_t nbytes)

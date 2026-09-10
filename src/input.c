@@ -61,10 +61,24 @@
 #define IBUFSIZ (BUFSIZ + 1)
 
 
-MKINIT struct parsefile basepf;	/* top level input file */
-MKINIT char basebuf[IBUFSIZ];	/* buffer for top level input file */
-struct parsefile *parsefile = &basepf;	/* current input file */
-int whichprompt;		/* 1 == PS1, 2 == PS2 */
+MKINIT __thread struct parsefile basepf;	/* top level input file */
+MKINIT __thread char basebuf[IBUFSIZ];	/* buffer for top level input file */
+__thread struct parsefile *parsefile;	/* current input file */
+
+/*
+ * iSH-AOK: the address of a thread-local is not a compile-time constant, so
+ * the globals that point INTO another global cannot say so in their
+ * initializers any more (tools/dash-tls-rewrite.py, and the reason the
+ * conversion exists at all is in deps/dash/src/aok_fork.c). Each file fixes up
+ * its own, because MINSIZE and varinit's layout are private to their file, and
+ * main() calls the lot before it touches anything.
+ */
+void
+aok_fix_input(void)
+{
+	parsefile = &basepf;
+}
+__thread int whichprompt;		/* 1 == PS1, 2 == PS2 */
 
 STATIC void pushfile(void);
 static void popstring(void);

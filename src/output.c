@@ -70,7 +70,7 @@
 
 
 #ifdef USE_GLIBC_STDIO
-struct output output = {
+__thread struct output output = {
 	.stream = 0, .nextc = 0, .end = 0, .buf = 0, .bufsize = 0, .fd = 1, .flags = 0
 };
 struct output errout = {
@@ -82,21 +82,36 @@ struct output memout = {
 };
 #endif
 #else
-struct output output = {
+__thread struct output output = {
 	.nextc = 0, .end = 0, .buf = 0, .bufsize = OUTBUFSIZ, .fd = 1, .flags = 0
 };
-struct output errout = {
+__thread struct output errout = {
 	.nextc = 0, .end = 0, .buf = 0, .bufsize = 0, .fd = 2, .flags = 0
 };
-struct output preverrout;
+__thread struct output preverrout;
 #ifdef notyet
 struct output memout = {
 	.nextc = 0, .end = 0, .buf = 0, .bufsize = 0, .fd = MEM_OUT, .flags = 0
 };
 #endif
 #endif
-struct output *out1 = &output;
-struct output *out2 = &errout;
+__thread struct output *out1;
+__thread struct output *out2;
+
+/*
+ * iSH-AOK: the address of a thread-local is not a compile-time constant, so
+ * the globals that point INTO another global cannot say so in their
+ * initializers any more (tools/dash-tls-rewrite.py, and the reason the
+ * conversion exists at all is in deps/dash/src/aok_fork.c). Each file fixes up
+ * its own, because MINSIZE and varinit's layout are private to their file, and
+ * main() calls the lot before it touches anything.
+ */
+void
+aok_fix_output(void)
+{
+	out1 = &output;
+	out2 = &errout;
+}
 
 
 static int xvsnprintf(char *, size_t, const char *, va_list);

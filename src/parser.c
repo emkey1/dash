@@ -94,17 +94,17 @@ struct synstack {
 
 
 
-struct heredoc *heredoclist;	/* list of here documents to read */
-int doprompt;			/* if set, prompt the user */
-int needprompt;			/* true if interactive and at start of line */
-int lasttoken;			/* last token read */
-int tokpushback;		/* last token pushed back */
-char *wordtext;			/* text of last word returned by readtoken */
-int checkkwd;
-struct nodelist *backquotelist;
-union node *redirnode;
-struct heredoc *heredoc;
-int quoteflag;			/* set if (part of) last token was quoted */
+__thread struct heredoc *heredoclist;	/* list of here documents to read */
+__thread int doprompt;			/* if set, prompt the user */
+__thread int needprompt;			/* true if interactive and at start of line */
+__thread int lasttoken;			/* last token read */
+__thread int tokpushback;		/* last token pushed back */
+__thread char *wordtext;			/* text of last word returned by readtoken */
+__thread int checkkwd;
+__thread struct nodelist *backquotelist;
+__thread union node *redirnode;
+__thread struct heredoc *heredoc;
+__thread int quoteflag;			/* set if (part of) last token was quoted */
 
 
 STATIC union node *list(int);

@@ -67,19 +67,19 @@
 #endif
 
 
-int evalskip;			/* set if we are skipping commands */
-STATIC int skipcount;		/* number of levels to skip */
-MKINIT int loopnest;		/* current loop nesting level */
-static int funcline;		/* starting line number of current function, or 0 if not in a function */
+__thread int evalskip;			/* set if we are skipping commands */
+STATIC __thread int skipcount;		/* number of levels to skip */
+MKINIT __thread int loopnest;		/* current loop nesting level */
+static __thread int funcline;		/* starting line number of current function, or 0 if not in a function */
 
 
-char *commandname;
-int exitstatus;			/* exit status of last command */
-int back_exitstatus;		/* exit status of backquoted command */
-int savestatus = -1;		/* exit status of last command outside traps */
+__thread char *commandname;
+__thread int exitstatus;			/* exit status of last command */
+__thread int back_exitstatus;		/* exit status of backquoted command */
+__thread int savestatus = -1;		/* exit status of last command outside traps */
 
 /* Prevent PS4 nesting. */
-MKINIT int inps4;
+MKINIT __thread int inps4;
 
 
 #if !defined(__alpha__) || (defined(__GNUC__) && __GNUC__ >= 3)

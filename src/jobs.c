@@ -84,24 +84,24 @@
 #define DOWAIT_WAITCMD_ALL 4
 
 /* array of jobs */
-static struct job *jobtab;
+static __thread struct job *jobtab;
 /* size of array */
-static unsigned njobs;
+static __thread unsigned njobs;
 /* pid of last background process */
-pid_t backgndpid;
+__thread pid_t backgndpid;
 
 #if JOBS
 /* pgrp of shell on invocation */
-static int initialpgrp;
+static __thread int initialpgrp;
 /* control terminal */
-static int ttyfd = -1;
+static __thread int ttyfd = -1;
 #endif
 
 /* current job */
-static struct job *curjob;
+static __thread struct job *curjob;
 
 /* Set if we are in the vforked child */
-int vforked;
+__thread int vforked;
 
 STATIC void set_curjob(struct job *, unsigned);
 STATIC int jobno(const struct job *);
@@ -185,7 +185,7 @@ set_curjob(struct job *jp, unsigned mode)
  * Called with interrupts off.
  */
 
-int jobctl;
+__thread int jobctl;
 
 void
 setjobctl(int on)
@@ -1196,7 +1196,7 @@ waitproc(int block, int *status)
 /*
  * return 1 if there are stopped jobs, otherwise 0
  */
-int job_warning;
+__thread int job_warning;
 int
 stoppedjobs(void)
 {
@@ -1222,7 +1222,7 @@ out:
  * jobs command).
  */
 
-STATIC char *cmdnextc;
+STATIC __thread char *cmdnextc;
 
 STATIC char *
 commandtext(union node *n)

@@ -62,8 +62,8 @@
 
 #define PROFILE 0
 
-int rootpid;
-int shlvl;
+__thread int rootpid;
+__thread int shlvl;
 #ifdef __GLIBC__
 int *dash_errno;
 #endif
@@ -71,7 +71,7 @@ int *dash_errno;
 short profile_buf[16384];
 extern int etext();
 #endif
-MKINIT struct jmploc main_handler;
+MKINIT __thread struct jmploc main_handler;
 
 STATIC void read_profile(const char *);
 STATIC char *find_dot_file(char *);
@@ -93,6 +93,11 @@ main(int argc, char **argv)
 	volatile int state;
 	struct stackmark smark;
 	int login;
+
+	/* iSH-AOK: before ANYTHING. The stack allocator's own pointers are
+	 * among these, so stalloc() -- which the setjmp handler path reaches
+	 * through exitreset() -- reads a null stackp until this has run. */
+	aok_fix_tables();
 
 #ifdef __GLIBC__
 	dash_errno = __errno_location();

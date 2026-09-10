@@ -49,8 +49,8 @@ static char	*getstr(void);
 static char	*mklong(const char *, const char *);
 static void      check_conversion(const char *, const char *);
 
-static int	rval;
-static char  **gargv;
+static __thread int	rval;
+static __thread char  **gargv;
 
 #define isodigit(c)	((c) >= '0' && (c) <= '7')
 #define octtobin(c)	((c) - '0')

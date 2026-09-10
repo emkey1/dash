@@ -60,7 +60,7 @@ struct cmdentry {
 
 union node;
 
-extern const char *pathopt;	/* set by padvance */
+extern const __thread char *pathopt;	/* set by padvance */
 
 void shellexec(char **, const char *, int)
     __attribute__((__noreturn__));

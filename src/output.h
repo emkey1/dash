@@ -54,14 +54,14 @@ struct output {
 	int flags;
 };
 
-extern struct output output;
-extern struct output errout;
-extern struct output preverrout;
+extern __thread struct output output;
+extern __thread struct output errout;
+extern __thread struct output preverrout;
 #ifdef notyet
 extern struct output memout;
 #endif
-extern struct output *out1;
-extern struct output *out2;
+extern __thread struct output *out1;
+extern __thread struct output *out2;
 
 void outmem(const char *, size_t, struct output *);
 void outstr(const char *, struct output *);

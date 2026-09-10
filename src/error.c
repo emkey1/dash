@@ -59,11 +59,11 @@
  * Code to handle exceptions in C.
  */
 
-struct jmploc *handler;
-int exception;
-int suppressint;
-volatile sig_atomic_t intpending;
-int errlinno;
+__thread struct jmploc *handler;
+__thread int exception;
+__thread int suppressint;
+volatile __thread sig_atomic_t intpending;
+__thread int errlinno;
 
 
 static void exverror(int, const char *, va_list)
